@@ -1,0 +1,64 @@
+
+From: 	    philip.price@ecorp.com
+To:	    elliot.alderson@ecorp.com
+
+Dear Mr Alderson, 
+
+You are the new IT-manager at E corp and your first task is to handle
+the access rights for the folder called fiveNine.
+
+You need to create an account for following users:
+
+- whiterose
+- cisco
+- shayla
+- darlene
+- tyrell
+
+Moreover, certain subgroups of employees of the company must be able
+to access the content of the fiveNine folder. Create following groups for
+the company:
+
+- darkarmy
+- ecorp
+
+Your task is to create the content of the fiveNine folder and assigned
+the required accesses. Be careful, the access and file names must be
+exact matches of the specification. The content of the files does not
+matter for now.
+
+The specification is:
+
+- The directory is called m4ster-s1ave. Its owner is shayla and it belongs to the group
+darkarmy. The owner must be able to see, modify and access the content of the
+directory. The group must be able to see the content of the directory. The others
+have no rights.
+
+- The file is called undo.gz. Its owner is tyrell and it belongs to the group
+ecorp. The owner has no rights. The group has no rights. The others must be
+able to write to the file.
+
+- The file is called unm4sk-pt1.tc. Its owner is darlene and it belongs to the group
+ecorp. The owner must be able to execute the file. The group must be able
+to read and write. The others must be able to read and execute. Only darlene
+should be able to delete or rename this file.
+
+- The file is called init_5.fve. Its owner is cisco and it belongs to the group
+darkarmy. The owner must be able to execute the file. The group must be able
+to write to the file. The others must be able to execute the file.
+
+- The file is called init_1_data. Its owner is whiterose and it belongs to the group
+darkarmy. The owner must be able to read the file. The group has no rights.
+The others have no rights.
+
+- The file is called init_1.exe. Its owner is whiterose and it belongs to the group
+darkarmy. The owner must be able to read and execute. The group must be able
+to write and execute. The others have no rights. init_1.exe is a sensitive program which
+requires read access to init_1_data to work properly. Every darkarmy member should be able to
+run this program successfully.
+
+Once you are done, submit your work using the share program.
+
+Best regards,
+
+Philip Price.  
