@@ -197,7 +197,7 @@ class ArtificialClass(object):
 
     def get_ta_argument(self, alice_message):
         """ Reveal Alice's concern to TA and receive a convincing argument. You need to get
-        a new message from alice (get_alice_message) and decrypt it before asking TA for
+        a new message from alice (recieve_alice_message) and decrypt it before asking TA for
         a new argument. 
 
         Args:
@@ -239,39 +239,35 @@ class ArtificialClass(object):
 #     Solve Alice's problem      #
 ##################################
 
-def enc_dec(cl):
+def enc_dec(cl, ciph_type):
     """
     Takes msg from alice, gets response from the ta and sends it to alice. Returns alice's response
     """
-    print("B0")
+
     msg1,iv = cl.receive_alice_message()
-    print("B1")
     key = cl.get_symmetric_key_from_alice()
-    print("HERE")
-    aes = cipher.Cipher("AES-128-CBC")
+    aes = cipher.Cipher(ciph_type)
+
+    # if len(iv)==0:
+    #     print("ALICE SENT AN EMPTY IV!")
+    #     iv = ("\0"*16).encode('utf-8')
+    #     print("iv is now",iv)
+
     dec = aes.dec(key,iv)
     txt = dec.update(msg1)
     txt += dec.finalize()
-    txt=str(txt) # befeore this its a b"string here", byte string type
+    txt = txt.decode('utf8') # change from byte string to string
 
-    print("iv",len(iv))
-    print("Ciphertxt:",msg1,"\nPlaintxt:",str(txt))
-    enc = aes.enc(key, iv)
-    print("utf8 code",txt.encode('utf-8'))
-    ciph_check = enc.update(txt.encode('utf-8'))
-    ciph_check +=enc.finalize()
-    print("Enc", ciph_check, ciph_check==txt)
-    #iv=b""
-    print("previous Iv:",iv)
+
     iv = urandom(16)
-    print(len(iv))
-    print("new IV:",iv)
     ta_arg1 = cl.get_ta_argument(txt)
-    print("ta_arg1:",bytes(ta_arg1,'utf-8'))
+
     enc = aes.enc(key,iv)
-    ciph_ToA= enc.update(bytes(ta_arg1,'utf-8'))
-    ciph_ToA +=enc.finalize()
+    ciph_ToA = enc.update(bytes(ta_arg1,'utf-8'))
+    ciph_ToA += enc.finalize()
     cl.send_message_to_alice(ciph_ToA,iv)
+
+    
 
 def part_one():
     """ 
@@ -283,30 +279,10 @@ def part_one():
     # replace with your sciper!!!
     cl = ArtificialClass(sciper=313180, mode="part1")
     
-    enc_dec(cl)
-    enc_dec(cl)
-
-
-    """msg1,iv = cl.receive_alice_message()
-        key = cl.get_symmetric_key_from_alice()
-        aes = cipher.Cipher("AES-128-CBC")
-        dec = aes.dec(key,iv)
-        txt = dec.update(msg1)
-        txt += dec.finalize()
-        txt=str(txt) # befeore this its a b"string here", byte string type
-
-        print("Ciphertxt:",msg1,"\nPlaintxt:",str(txt))
-        # enc = aes.enc(key, iv)
-        # ciph_check = enc.update(txt)
-        # ciph_check +=enc.finalize()
-        # print("Enc", ciph_check, ciph_check==txt)
-        
-        ta_arg1 = cl.get_ta_argument(txt)
-        print("ta_arg1",ta_arg1)
-        enc = aes.enc(key, iv)
-        ciph_ToA= enc.update(ta_arg1.encode('utf-8'))
-        ciph_ToA +=enc.finalize()
-        cl.send_message_to_alice(ciph_ToA,iv)"""
+    enc_dec(cl,"AES-128-CBC")
+    enc_dec(cl,"AES-128-CBC")
+    enc_dec(cl,"AES-128-CBC")
+    enc_dec(cl,"AES-128-CBC")
 
 
 
@@ -320,28 +296,41 @@ def part_two():
     # replace with your sciper!!!
     cl = ArtificialClass(sciper=313180, mode="part2")
 
-    msg1,iv = cl.receive_alice_message()
-    key = cl.get_symmetric_key_from_alice()
+    """
+    It seems like for this part it's giving an error because the initializaiton vector is 
+    returning zero the second time we recieve message from alice. I tried to resolve
+    this by changing the vector to be nulls (identity) sot hat it's or'ed with itself but 
+    that didn't work. also tried resuing first one but that didn't work.
+    I don't know why the first time we decrypted alice's msg we did get a vector and 
+    why CTR can sometimes have a vector and sometimes not??? Doesn't it just have a nonce?
+    """
 
-    aes = cipher.Cipher("AES-128-CTR")
+    enc_dec(cl,"AES-128-CTR")
+    enc_dec(cl,"AES-128-CTR")
+    enc_dec(cl,"AES-128-CTR")
 
-    decrypt = aes.dec(key,iv)
-    txt = decrypt.update(msg1)
-    txt += decrypt.finalize()
+    # msg1,iv = cl.receive_alice_message()
+    # key = cl.get_symmetric_key_from_alice()
 
-    txt=txt.decode('utf8')
+    # aes = cipher.Cipher("AES-128-CTR")
 
-    print("Msg is:",txt)
-    ta_arg = cl.get_ta_argument(txt)
+    # decrypt = aes.dec(key,iv)
+    # txt = decrypt.update(msg1)
+    # txt += decrypt.finalize()
 
-    new_iv=urandom(16)
-    encrypt = aes.enc(key,new_iv)
-    toSend = encrypt.update(bytes(txt,'utf8'))
-    toSend += encrypt.finalize()
+    # txt=txt.decode('utf8')
 
-    cl.send_message_to_alice(toSend, new_iv)
+    # print("Msg is:",txt)
+    # ta_arg = cl.get_ta_argument(txt)
 
-    msg2,iv_new = cl.receive_alice_message()
+    # new_iv=urandom(16)
+    # encrypt = aes.enc(key,new_iv)
+    # toSend = encrypt.update(bytes(txt,'utf8'))
+    # toSend += encrypt.finalize()
+
+    # cl.send_message_to_alice(toSend, new_iv)
+
+    # msg2,iv2 = cl.receive_alice_message()
     # msg1 = cl.get_alice_message()
     # decrypt
     # ta_arg1 = cl.get_ta_argument()
@@ -355,7 +344,7 @@ def main():
     closes, so you need to run challenges one by one.
     """
 
-    #part_one()
+   # part_one()
     part_two()
 
 
