@@ -5,6 +5,8 @@ Read the main function for instruction.
 """
 import json
 import base64
+import random
+import string
 
 from hashlib import sha256, scrypt
 from collections import deque
@@ -109,13 +111,20 @@ def check_correctness_scrypt(username, password):
     ans_hash = token
     return True
 
-def brute(s):
+def brute(s,sha_users):
+    """uses queue to do a depth first search
+    but password space is too big so I get python memory errors, i think"""
     q = deque([""])
     while len(q)!=0:
         elt = q.popleft()
+        print(elt)
         if len(q)!=0 and len(elt)!=len(q[0]): print("new len",elt)
-        yield elt #try password here
+        #yield elt #try password here
 
+        for sha_u in sha_users:
+            if check_correctness_sha(sha_u,elt):
+                print("FOUND SHA PASSWORD:",sha_u,"is",elt)
+                save_to_file(sha_u,elt)
 
         #checks passwords up to length 10
         if len(elt)>=10: continue #>=len(s): continue
@@ -123,7 +132,45 @@ def brute(s):
             q.append(elt+i)
         #print("Now q is",q)
     print("done with bf, last elt",elt)
-        
+
+def rand_brute(s,l,sha_users):
+    for i in range(len(s)**l):
+        elt = ''.join(random.choice(s) for i in range(l))
+        print(elt)
+        for sha_u in sha_users:
+                if check_correctness_sha(sha_u,elt):
+                    print("FOUND SHA PASSWORD:",sha_u,"is",elt)
+                    save_to_file(sha_u,elt)
+
+def counter_brute(s,starting):
+    """ s is string you are searching
+        user is list of users to check
+        starting is string count you are starting at
+    """
+    #assumes starting is with atlest 2 characters
+    curr = starting
+    s_at=0
+    while len(curr)<len(s):
+        yield curr
+        if s_at==len(s)-1: #we're at last digit
+            curr = curr[:-1] + s[0]
+            at=len(curr)-2 #at points to second to last digit
+            while(at>=0): # go backwards through and find the digit that's not maxed out
+                if curr[at]==s[-1]: # case where digit is maxed out. keep going back
+                    curr = curr[:at]+s[0]+curr[at+1:] #+1 bc we want to replace char at at with s[0]
+                    at-=1
+                else:
+                    s_ind = s.find(curr[at]) #find which digit we are at in s
+                    curr = curr[:at]+s[s_ind+1]+curr[at+1:]
+                    break #we're done
+            if at==-1: # if we went all the way backwards and didn't use the break that means we need to add new digit infront
+                curr = s[0]+curr
+            s_at=0
+        else:
+            s_at+=1
+            curr = curr[:-1] + s[s_at]
+                
+
 def save_to_file(u,guess):
     global ans_hash
     pfile = open("passwords.txt","a+")
@@ -150,19 +197,63 @@ def main():
     script_users = list(db["scrypt"].keys())
 
 
-    for guess in brute(simplified):
-        for ind,sha_u in enumerate(sha_users):
-            #print("at",u,guess)
-            if check_correctness_sha(sha_u,guess):
-                print("FOUND SHA PASSWORD:",sha_u,"is",guess)
-                save_to_file(sha_u,guess)
+    # for guess in brute(simplified):
+    #     for ind,sha_u in enumerate(sha_users):
+    #         #print("at",u,guess)
+    #         if check_correctness_sha(sha_u,guess):
+    #             print("FOUND SHA PASSWORD:",sha_u,"is",guess)
+    #            save_to_file(sha_u,guess)
 
             #     #return
             # if check_correctness_scrypt(script_users[ind],guess):
             #     print("FOUND Scrypt PASSWORD:",script_users[ind],"is",guess)
             #     save_to_file(script_users[ind],guess)
             
-    print("finished checking bruteforce",guess)
+   # brute(simplified[:20],sha_users)
+
+    # s= "0123456789abcdefghijklmnopqrstuvwxyz"
+    # q = deque([""])
+    # while len(q)!=0:
+    #     elt = q.popleft()
+    #     #print(elt)
+    #     if len(q)!=0 and len(elt)!=len(q[0]): print("new len",elt)
+    #     #yield elt #try password here
+
+    #     for sha_u in sha_users:
+    #         if check_correctness_sha(sha_u,elt):
+    #             print("FOUND SHA PASSWORD:",sha_u,"is",elt)
+    #             save_to_file(sha_u,elt)
+
+    #     #checks passwords up to length 10
+    #     if len(elt)>=10: continue #>=len(s): continue
+    #     for i in s:
+    #         q.append(elt+i)
+    #     #print("Now q is",q)
+    # print("done with bf, last elt",elt)
+
+    #rand_brute("abcd123",4)
+    # s=simplified
+    # for l in range(5,12):
+    #     print("on L",l)
+    #     for i in range(len(s)**l):
+    #         elt = ''.join(random.choice(s) for i in range(l))
+    #         #print(elt)
+    #         for sha_u in sha_users:
+    #                 if check_correctness_sha(sha_u,elt):
+    #                     print("FOUND SHA PASSWORD:",sha_u,"is",elt)
+    #                     save_to_file(sha_u,elt)
+    s=simplified
+    for elt in counter_brute(s,"000"):
+        print(elt)
+        for ind,sha_u in enumerate(sha_users):
+            if check_correctness_sha(sha_u,elt):
+                print("FOUND SHA PASSWORD:",sha_u,"is",elt)
+                save_to_file(sha_u,elt)
+            if check_correctness_scrypt(script_users[ind],elt):
+                print("FOUND Scrypt PASSWORD:",script_users[ind],"is",elt)
+                save_to_file(script_users[ind],elt)
+
+    print("finished checking bruteforce")
 
     check_correctness_sha("WhoCares123", "")
 
