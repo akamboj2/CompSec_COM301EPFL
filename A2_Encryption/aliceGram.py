@@ -267,7 +267,19 @@ def enc_dec(cl, ciph_type):
     ciph_ToA += enc.finalize()
     cl.send_message_to_alice(ciph_ToA,iv)
 
-    
+
+    #delete this for part 1--no need to recreate the cipher object for part2 (stream cipher has one iv!)
+    msg2,_ = cl.receive_alice_message()
+    txt2 = dec.update(msg2)
+    txt2 = txt2.decode('utf8')
+
+    cl.send_message_to_alice(enc.update(bytes(cl.get_ta_argument(txt2),'utf-8')))
+    cl.send_message_to_alice(enc.update(bytes(cl.get_ta_argument(dec.update(cl.receive_alice_message()[0]).decode('utf8')),'utf-8')))
+    cl.send_message_to_alice(enc.update(bytes(cl.get_ta_argument(dec.update(cl.receive_alice_message()[0]).decode('utf8')),'utf-8')))
+    cl.send_message_to_alice(enc.update(bytes(cl.get_ta_argument(dec.update(cl.receive_alice_message()[0]).decode('utf8')),'utf-8')))
+    cl.send_message_to_alice(enc.update(bytes(cl.get_ta_argument(dec.update(cl.receive_alice_message()[0]).decode('utf8')),'utf-8')))
+
+
 
 def part_one():
     """ 
@@ -306,8 +318,8 @@ def part_two():
     """
 
     enc_dec(cl,"AES-128-CTR")
-    enc_dec(cl,"AES-128-CTR")
-    enc_dec(cl,"AES-128-CTR")
+    # enc_dec(cl,"AES-128-CTR")
+    # enc_dec(cl,"AES-128-CTR")
 
     # msg1,iv = cl.receive_alice_message()
     # key = cl.get_symmetric_key_from_alice()
