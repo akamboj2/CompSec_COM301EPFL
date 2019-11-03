@@ -116,11 +116,13 @@ def brute(s):
         if len(q)!=0 and len(elt)!=len(q[0]): print("new len",elt)
         yield elt #try password here
 
+
         #checks passwords up to length 10
-        if len(elt)>=10: continue#>=len(s): continue
+        if len(elt)>=10: continue #>=len(s): continue
         for i in s:
             q.append(elt+i)
         #print("Now q is",q)
+    print("done with bf, last elt",elt)
         
 def save_to_file(u,guess):
     global ans_hash
@@ -160,7 +162,7 @@ def main():
             #     print("FOUND Scrypt PASSWORD:",script_users[ind],"is",guess)
             #     save_to_file(script_users[ind],guess)
             
-    print("finished checking bruteforce")
+    print("finished checking bruteforce",guess)
 
     check_correctness_sha("WhoCares123", "")
 
