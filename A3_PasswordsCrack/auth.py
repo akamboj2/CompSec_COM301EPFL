@@ -183,6 +183,11 @@ def save_to_file(u,guess):
     pfile.write(u+", "+guess+", "+ans_hash+'\n')
     pfile.close()
 
+def make_perm(l1,l2):
+    """takes in a list of strings and makes permutation of them"""
+    flatten = lambda l: [item for sublist in l for item in sublist]  # creds to  https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists
+    return flatten(list(map(lambda y: list(map(lambda x: y+x, l1)),l2)))
+
 def main():
     """ Assignment 3: cracking passwords
 	This scripts lets you check your password guesses .
@@ -213,47 +218,55 @@ def main():
     #             save_to_file(script_users[ind],elt)
 
     s = valid_chars
-    # slist= list(valid_chars) # not that this doesn't have the list of chars itself
-    # curr="0000"
-    # flatten = lambda l: [item for sublist in l for item in sublist]  # creds to  https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists
-    # slist2 = [""] + flatten(list(map(lambda y: list(map(lambda x: curr+y+x, slist)),slist)))
-    
+    slist= list(valid_chars) # not that this doesn't have the list of chars itself
+    curr="0000"
+    flatten = lambda l: [item for sublist in l for item in sublist]  # creds to  https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists
+    slist2 = flatten(list(map(lambda y: list(map(lambda x: curr+y+x, slist)),slist)))
+    # we should do the above 4 times. bc s = 94 characters and 94^5 overflows an 32 bit int but 94^4 is fine
+    slist3=[""] + flatten(list(map(lambda y: list(map(lambda x: curr+y+x, slist)),slist)))
+
+    m_test=make_perm(slist,slist)
+    print(len(slist2),len(m_test))
+
     # for i in slist2:
     #     print(i)
-    #print(slist2)
-    curr = "0t/0"  #farthest is 0t/0
-    s_at=0
-    digit_print=0 #just a count to print every so often
-    while len(curr)<len(s):
-        # if digit_print==25:
-        #     digit_print=0
-        print(curr)
-        for ind,sha_u in enumerate(sha_users):
-            if check_correctness_sha(sha_u,curr):
-                print("FOUND SHA PASSWORD:",sha_u,"is",curr)
-                save_to_file(sha_u,curr)
-            if check_correctness_scrypt(script_users[ind],curr):
-                print("FOUND Scrypt PASSWORD:",script_users[ind],"is",curr)
-                save_to_file(script_users[ind],curr)
+    # print(slist2)
+    # print(len(s))
 
-        if s_at==len(s)-1: #we're at last digit
-            digit_print+=1
-            curr = curr[:-1] + s[0]
-            at=len(curr)-2 #at points to second to last digit
-            while(at>=0): # go backwards through and find the digit that's not maxed out
-                if curr[at]==s[-1]: # case where digit is maxed out. keep going back
-                    curr = curr[:at]+s[0]+curr[at+1:] #+1 bc we want to replace char at at with s[0]
-                    at-=1
-                else:
-                    s_ind = s.find(curr[at]) #find which digit we are at in s
-                    curr = curr[:at]+s[s_ind+1]+curr[at+1:]
-                    break #we're done
-            if at==-1: # if we went all the way backwards and didn't use the break that means we need to add new digit infront
-                curr = s[0]+curr
-            s_at=0
-        else:
-            s_at+=1
-            curr = curr[:-1] + s[s_at]
+
+    # curr = "0t/0"  #farthest is 0t/0
+    # s_at=0
+    # digit_print=0 #just a count to print every so often
+    # while len(curr)<len(s):
+    #     # if digit_print==25:
+    #     #     digit_print=0
+    #     print(curr)
+    #     for ind,sha_u in enumerate(sha_users):
+    #         if check_correctness_sha(sha_u,curr):
+    #             print("FOUND SHA PASSWORD:",sha_u,"is",curr)
+    #             save_to_file(sha_u,curr)
+    #         if check_correctness_scrypt(script_users[ind],curr):
+    #             print("FOUND Scrypt PASSWORD:",script_users[ind],"is",curr)
+    #             save_to_file(script_users[ind],curr)
+
+    #     if s_at==len(s)-1: #we're at last digit
+    #         digit_print+=1
+    #         curr = curr[:-1] + s[0]
+    #         at=len(curr)-2 #at points to second to last digit
+    #         while(at>=0): # go backwards through and find the digit that's not maxed out
+    #             if curr[at]==s[-1]: # case where digit is maxed out. keep going back
+    #                 curr = curr[:at]+s[0]+curr[at+1:] #+1 bc we want to replace char at at with s[0]
+    #                 at-=1
+    #             else:
+    #                 s_ind = s.find(curr[at]) #find which digit we are at in s
+    #                 curr = curr[:at]+s[s_ind+1]+curr[at+1:]
+    #                 break #we're done
+    #         if at==-1: # if we went all the way backwards and didn't use the break that means we need to add new digit infront
+    #             curr = s[0]+curr
+    #         s_at=0
+    #     else:
+    #         s_at+=1
+    #         curr = curr[:-1] + s[s_at]
     
 
     print("finished checking bruteforce")
