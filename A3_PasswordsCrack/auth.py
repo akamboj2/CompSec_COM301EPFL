@@ -134,7 +134,7 @@ def brute(s,sha_users):
         #print("Now q is",q)
     print("done with bf, last elt",elt)
 
-def rand_brute(s,l,sha_users):
+def rand_brute(s,l,scrypt_users):
     """ just brute force using random strings on passwords
         s = string of possible characters
         l = length of passwords to try
@@ -143,10 +143,15 @@ def rand_brute(s,l,sha_users):
     for i in range(len(s)**l):
         elt = ''.join(random.choice(s) for i in range(l))
         print(elt)
-        for sha_u in sha_users:
-                if check_correctness_sha(sha_u,elt):
-                    print("FOUND SHA PASSWORD:",sha_u,"is",elt)
-                    save_to_file(sha_u,elt)
+        # for sha_u in sha_users:
+            # if check_correctness_sha(sha_u,elt):
+            #     print("FOUND SHA PASSWORD:",sha_u,"is",elt)
+            #     save_to_file(sha_u,elt)
+        for scrypt_u in scrypt_users:
+            for at in [elt[:-1],elt[:-2],elt[:-3],elt[:-4]]: #might as well check length 7 6 5 4 as well
+                if check_correctness_scrypt(scrypt_u,at):
+                    print("FOUND Scrypt PASSWORD:",scrypt_u,"is",at)
+                    save_to_file(scrypt_u,at)
 
 def counter_brute(s,starting):
     """ generator returning your string as a counter
@@ -206,49 +211,50 @@ def main():
     print("starting bruteforce")
     sha_users = list(db["sha256"].keys())
     script_users = list(db["scrypt"].keys())
+    
+    for elt in counter_brute(simplified,"9PMM"):
+        print(elt)
+        for ind,sha_u in enumerate(sha_users):
+            if check_correctness_sha(sha_u,elt):
+                print("FOUND SHA PASSWORD:",sha_u,"is",elt)
+                save_to_file(sha_u,elt)
+            # if check_correctness_scrypt(script_users[ind],elt):
+            #     print("FOUND Scrypt PASSWORD:",script_users[ind],"is",elt)
+            #     save_to_file(script_users[ind],elt)
+    """s = valid_chars #size is 94 chars
 
-    # for elt in counter_brute(valid_chars,"800"):
-    #     print(elt)
-    #     for ind,sha_u in enumerate(sha_users):
-    #         if check_correctness_sha(sha_u,elt):
-    #             print("FOUND SHA PASSWORD:",sha_u,"is",elt)
-    #             save_to_file(sha_u,elt)
-    #         if check_correctness_scrypt(script_users[ind],elt):
-    #             print("FOUND Scrypt PASSWORD:",script_users[ind],"is",elt)
-    #             save_to_file(script_users[ind],elt)
+    #rand_brute(s,8,script_users)
 
-    s = valid_chars #size is 94 chars
-    slist= list(valid_chars)
+    slist= list(s)
     # we should do the above 4 times. bc s = 94 characters and 94^5 overflows an 32 bit int but 94^4 is fine
     #jk 4 times breaks it (memory error) lets do it thrice.
     slist2=make_perm(slist,slist)
     slist3=make_perm(slist2,slist)
     #print(len(slist3)) #this is 857375 = 94^3 which is good!
-    slistALL=[""]+slist+slist2+slist3 #this should be 94^3+94^2+94 + 1 =839515
+    slistALL=[""]+slist+slist2 +slist3 #this should be 94^3+94^2+94 + 1 =839515
     #print(len(slistALL)) #and that's what it is yay!
 
     #NOTE! you have to change s_at if you're changing last digit in curr
-    curr = "0002"  #farthest is 0t/0 without checking 5-7 digit space
-    s_at=2
+    curr = "0000"  #farthest is 0t/0 without checking 5-7 digit space
+    s_at=0 #sha is at 005O
 
 
     digit_print=0 #just a count to print every so often
-    # for elt in iter(map(lambda x: curr+x, slistALL)):
-    #     print(elt)
+    
     while len(curr)<5: #assuming curr starts at length 4. it's going to check up to through digit lenth 7. so if we get up to digit 5 we should jump to 8 digits: '0000'
         # if digit_print==25:
         #     digit_print=0
-        print("incr, a 4th digit:",curr)
+        print("incr, a 4th digit:",curr,s_at)
 
         for ind,elt in enumerate(map(lambda x: curr+x, slistALL)):
-            print(elt)
+            #print(elt)
             for ind,sha_u in enumerate(sha_users):
-                # if check_correctness_sha(sha_u,elt):
-                #     print("FOUND SHA PASSWORD:",sha_u,"is",elt)
-                #     save_to_file(sha_u,elt)
-                if check_correctness_scrypt(script_users[ind],elt):
-                    print("FOUND Scrypt PASSWORD:",script_users[ind],"is",elt)
-                    save_to_file(script_users[ind],elt)
+                if check_correctness_sha(sha_u,elt):
+                    print("FOUND SHA PASSWORD:",sha_u,"is",elt)
+                    save_to_file(sha_u,elt)
+                # if check_correctness_scrypt(script_users[ind],elt):
+                #     print("FOUND Scrypt PASSWORD:",script_users[ind],"is",elt)
+                #     save_to_file(script_users[ind],elt)
         
         
         if s_at==len(s)-1: #we're at last digit
@@ -268,7 +274,7 @@ def main():
             s_at=0
         else:
             s_at+=1
-            curr = curr[:-1] + s[s_at]
+            curr = curr[:-1] + s[s_at]"""
     
 
     print("finished checking bruteforce")
