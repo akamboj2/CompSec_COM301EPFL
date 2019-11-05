@@ -7,7 +7,7 @@ import json
 import base64
 import random
 import string
-
+# import time
 from hashlib import sha256, scrypt
 from collections import deque
 
@@ -217,60 +217,70 @@ def main():
     #             print("FOUND Scrypt PASSWORD:",script_users[ind],"is",elt)
     #             save_to_file(script_users[ind],elt)
 
-    s = valid_chars
-    slist= list(valid_chars) # not that this doesn't have the list of chars itself
-    curr="0000"
-    flatten = lambda l: [item for sublist in l for item in sublist]  # creds to  https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists
-    slist2 = flatten(list(map(lambda y: list(map(lambda x: curr+y+x, slist)),slist)))
+    s = valid_chars #size is 94 chars
+    slist= list(valid_chars)
     # we should do the above 4 times. bc s = 94 characters and 94^5 overflows an 32 bit int but 94^4 is fine
-    slist3=[""] + flatten(list(map(lambda y: list(map(lambda x: curr+y+x, slist)),slist)))
+    #jk 4 times breaks it (memory error) lets do it thrice.
+    slist2=make_perm(slist,slist)
+    slist3=make_perm(slist2,slist)
+    #print(len(slist3)) #this is 857375 = 94^3 which is good!
+    slistALL=[""]+slist+slist2+slist3 #this should be 94^3+94^2+94 + 1 =839515
+    #print(len(slistALL)) #and that's what it is yay!
 
-    m_test=make_perm(slist,slist)
-    print(len(slist2),len(m_test))
-
-    # for i in slist2:
-    #     print(i)
-    # print(slist2)
-    # print(len(s))
+    #NOTE! you have to change s_at if you're changing last digit in curr
+    curr = "0002"  #farthest is 0t/0 without checking 5-7 digit space
+    s_at=2
 
 
-    # curr = "0t/0"  #farthest is 0t/0
-    # s_at=0
-    # digit_print=0 #just a count to print every so often
-    # while len(curr)<len(s):
-    #     # if digit_print==25:
-    #     #     digit_print=0
-    #     print(curr)
-    #     for ind,sha_u in enumerate(sha_users):
-    #         if check_correctness_sha(sha_u,curr):
-    #             print("FOUND SHA PASSWORD:",sha_u,"is",curr)
-    #             save_to_file(sha_u,curr)
-    #         if check_correctness_scrypt(script_users[ind],curr):
-    #             print("FOUND Scrypt PASSWORD:",script_users[ind],"is",curr)
-    #             save_to_file(script_users[ind],curr)
+    digit_print=0 #just a count to print every so often
+    # for elt in iter(map(lambda x: curr+x, slistALL)):
+    #     print(elt)
+    while len(curr)<5: #assuming curr starts at length 4. it's going to check up to through digit lenth 7. so if we get up to digit 5 we should jump to 8 digits: '0000'
+        # if digit_print==25:
+        #     digit_print=0
+        print("incr, a 4th digit:",curr)
 
-    #     if s_at==len(s)-1: #we're at last digit
-    #         digit_print+=1
-    #         curr = curr[:-1] + s[0]
-    #         at=len(curr)-2 #at points to second to last digit
-    #         while(at>=0): # go backwards through and find the digit that's not maxed out
-    #             if curr[at]==s[-1]: # case where digit is maxed out. keep going back
-    #                 curr = curr[:at]+s[0]+curr[at+1:] #+1 bc we want to replace char at at with s[0]
-    #                 at-=1
-    #             else:
-    #                 s_ind = s.find(curr[at]) #find which digit we are at in s
-    #                 curr = curr[:at]+s[s_ind+1]+curr[at+1:]
-    #                 break #we're done
-    #         if at==-1: # if we went all the way backwards and didn't use the break that means we need to add new digit infront
-    #             curr = s[0]+curr
-    #         s_at=0
-    #     else:
-    #         s_at+=1
-    #         curr = curr[:-1] + s[s_at]
+        for ind,elt in enumerate(map(lambda x: curr+x, slistALL)):
+            print(elt)
+            for ind,sha_u in enumerate(sha_users):
+                # if check_correctness_sha(sha_u,elt):
+                #     print("FOUND SHA PASSWORD:",sha_u,"is",elt)
+                #     save_to_file(sha_u,elt)
+                if check_correctness_scrypt(script_users[ind],elt):
+                    print("FOUND Scrypt PASSWORD:",script_users[ind],"is",elt)
+                    save_to_file(script_users[ind],elt)
+        
+        
+        if s_at==len(s)-1: #we're at last digit
+            #digit_print+=1
+            curr = curr[:-1] + s[0]
+            at=len(curr)-2 #at points to second to last digit
+            while(at>=0): # go backwards through and find the digit that's not maxed out
+                if curr[at]==s[-1]: # case where digit is maxed out. keep going back
+                    curr = curr[:at]+s[0]+curr[at+1:] #+1 bc we want to replace char at at with s[0]
+                    at-=1
+                else:
+                    s_ind = s.find(curr[at]) #find which digit we are at in s
+                    curr = curr[:at]+s[s_ind+1]+curr[at+1:]
+                    break #we're done
+            if at==-1: # if we went all the way backwards and didn't use the break that means we need to add new digit infront
+                curr = s[0]+curr
+            s_at=0
+        else:
+            s_at+=1
+            curr = curr[:-1] + s[s_at]
     
 
     print("finished checking bruteforce")
 
 
 if __name__ == "__main__":
-    main()
+    # s1 = time.time()
+    # check_correctness_sha('bob','123')
+    # s1end=time.time()
+    # s2=time.time()
+    # check_correctness_scrypt('MsSmith','123')
+    # s2end=time.time()
+    # print(s1end-s1,s2end-s2)
+    # so check_scrypt is muccchhh slower
+   main()
